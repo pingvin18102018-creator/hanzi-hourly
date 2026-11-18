@@ -73,6 +73,41 @@
 
     <h2 class="sec">Мои слова <span id="wordCount" class="muted"></span></h2>
     <ul class="cards" id="wordList"></ul>
+
+    <!-- Вторая кнопка снизу: не зависит от загрузки кода приложения -->
+    <div class="start-bottom">
+      <button class="btn primary big" id="btnStartBottom"
+        onclick="window.__hzStart ? window.__hzStart() : window.__hzWait();">▶ Начать тренировку</button>
+      <div id="homeMsg2" class="msg"></div>
+    </div>
+
+    <script>
+      // Аварийный путь: даже если app.js не загрузился, кнопка отвечает осмысленно.
+      window.__hzWait = function () {
+        var box = document.getElementById('homeMsg2');
+        box.textContent = 'Загружаю код приложения…';
+        var waited = 0;
+        var timer = setInterval(function () {
+          waited += 250;
+          var app = window.__HZ_TEST__;
+          if (app && app.startSession) {
+            clearInterval(timer);
+            box.textContent = '';
+            app.startSession();
+            return;
+          }
+          if (waited >= 5000) {
+            clearInterval(timer);
+            box.textContent = 'Код приложения не загрузился (app.js). Проверь интернет, обнови страницу.';
+          }
+        }, 250);
+      };
+      document.getElementById('btnStartBottom').addEventListener('click', function () {
+        var app = window.__HZ_TEST__;
+        if (app && app.startSession) { app.startSession(); return; }
+        window.__hzWait();
+      });
+    </script>
   </section>
 
   <!-- ТРЕНИРОВКА: вопрос → пишу от руки → программа проверяет -->
