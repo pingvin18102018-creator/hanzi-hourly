@@ -232,9 +232,8 @@
       : due > 0
         ? `Готовы к повторению: ${due} · всего слов: ${live.length}`
         : `Все повторены. Следующее — ${SRS.describeDue(Math.min(...live.map((c) => c.due || 0)), now)}`;
-    $('#btnStart').textContent = live.length
-      ? `Начать тренировку (${Math.min(settings.sessionSize, live.length)})`
-      : 'Добавить слово';
+    // подпись кнопки не меняем: иначе её «съедают» некоторые пути (иначе кнопка выглядит мёртвой)
+    $('#btnStart').textContent = 'Начать тренировку';
     $('#wordCount').textContent = live.length ? `(${live.length})` : '';
 
     const pill = $('#duePill');
