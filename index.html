@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#c9473d">
+<title>汉字 каждый час</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand" id="brand">汉字 <span>каждый час</span></div>
+  <span class="pill" id="duePill" hidden></span>
+</header>
+
+<main>
+  <!-- ГЛАВНАЯ -->
+  <section class="view" id="view-home">
+    <div class="hero">
+      <h1 id="homeTitle">Тренировка на 60 секунд</h1>
+      <p class="sub" id="homeSub">Загружаю слова…</p>
+      <button class="btn primary big" id="btnStart">Начать тренировку</button>
+    </div>
+
+    <div class="quick">
+      <button class="tile" data-go="add"><span class="ti">＋</span>Добавить слово</button>
+      <button class="tile" data-go="list"><span class="ti">▤</span>Списком</button>
+      <button class="tile" data-go="photo"><span class="ti">📷</span>Фото урока</button>
+      <button class="tile" data-go="settings"><span class="ti">⏰</span>Напоминание</button>
+    </div>
+
+    <h2 class="sec">Мои слова <span id="wordCount" class="muted"></span></h2>
+    <ul class="cards" id="wordList"></ul>
+  </section>
+
+  <!-- ТРЕНИРОВКА: вопрос → пишу от руки → программа проверяет -->
+  <section class="view" id="view-session" hidden>
+    <div class="session-top">
+      <button class="btn ghost small" id="btnEndSession">← Готово</button>
+      <span class="muted" id="sessionProgress"></span>
+      <span class="mode-pill" id="modePill"></span>
+    </div>
+
+    <div class="question" id="face">
+      <div class="hint small" id="faceHint"></div>
+      <div class="prompt" id="faceHanzi"></div>
+    </div>
+
+    <div class="write-area">
+      <canvas id="pad" width="600" height="600" aria-label="пиши здесь"></canvas>
+      <div class="pad-hint" id="padHint">напиши ответ пальцем</div>
+      <canvas id="hintLayer" width="600" height="600" hidden aria-hidden="true"></canvas>
+    </div>
+
+    <div class="verdict" id="verdict" hidden></div>
+
+    <div class="pad-actions">
+      <button class="btn ghost" id="btnErase">🧽 Стереть</button>
+      <button class="btn primary" id="btnCheck">Проверить</button>
+      <button class="btn ghost" id="btnHint">💡 Подсказка</button>
+    </div>
+
+    <div class="actions" id="answerActions" hidden>
+      <button class="btn big" id="btnNext">Дальше →</button>
+    </div>
+
+    <div class="answer" id="answer" hidden>
+      <div class="answer-hanzi" id="ansHanzi"></div>
+      <div class="answer-pinyin" id="ansPinyin"></div>
+      <div class="answer-meaning" id="ansMeaning"></div>
+      <div class="answer-ex" id="ansExample"></div>
+      <div class="answer-note" id="ansNote"></div>
+    </div>
+  </section>
+
+  <!-- РЕЗУЛЬТАТ СЕССИИ -->
+  <section class="view" id="view-done" hidden>
+    <div class="hero">
+      <div class="done-emoji">✅</div>
+      <h1>Готово!</h1>
+      <p class="sub" id="doneSub"></p>
+      <button class="btn primary big" data-go="home">На главную</button>
+    </div>
+  </section>
+
+  <!-- ДОБАВИТЬ СЛОВО -->
+  <section class="view" id="view-add" hidden>
+    <h1 class="view-title">Добавить слово</h1>
+    <form id="formAdd" class="form" autocomplete="off">
+      <label>Иероглиф *<input id="fHanzi" name="hanzi" lang="zh" inputmode="text" required placeholder="你好"></label>
+      <label>Пиньинь<input id="fPinyin" name="pinyin" placeholder="nǐ hǎo"></label>
+      <label>Перевод *<input id="fMeaning" name="meaning" required placeholder="привет"></label>
+      <label>Пример (китайский)<input id="fExZh" name="example_zh" lang="zh" placeholder="你好！"></label>
+      <label>Пример (перевод)<input id="fExRu" name="example_ru" placeholder="Привет!"></label>
+      <label>Заметка<input id="fNote" name="note" placeholder="человек + 尔"></label>
+      <label>Фото<input id="fPhoto" name="photo" type="file" accept="image/*"></label>
+      <div class="row">
+        <button type="submit" class="btn primary">💾 Сохранить</button>
+        <button type="button" class="btn ghost" data-go="home">Отмена</button>
+      </div>
+      <p class="msg" id="addMsg"></p>
+    </form>
+  </section>
+
+  <!-- СПИСКОМ -->
+  <section class="view" id="view-list" hidden>
+    <h1 class="view-title">Добавить списком</h1>
+    <p class="sub">По одной карточке в строке: <b>汉字 | пиньинь | перевод</b><br>
+      Работают разделители <code>|</code>, таб, запятая и просто пробелы.</p>
+    <textarea id="listText" rows="9" lang="zh" placeholder="你 | nǐ | ты&#10;谢谢 xièxie спасибо&#10;老师 | lǎoshī | учитель"></textarea>
+    <div class="row">
+      <button class="btn primary" id="btnParseList">Проверить</button>
+    </div>
+    <div id="parseResult"></div>
+    <div class="row" id="importRow" hidden>
+      <button class="btn primary" id="btnImport">Добавить в приложение</button>
+    </div>
+  </section>
+
+  <!-- ФОТО -->
+  <section class="view" id="view-photo" hidden>
+    <h1 class="view-title">Фото урока</h1>
+    <p class="sub">Сфотографируй страницу с иероглифами — она станет карточкой,
+      будешь смотреть и вспоминать. Если нужен ещё и текст, допиши пиньинь и перевод.</p>
+    <label class="drop">
+      <input id="photoInput" type="file" accept="image/*" capture="environment" multiple>
+      <span>📷 Снять страницу / выбрать из галереи</span>
+    </label>
+    <div id="photoPreview" class="photo-grid"></div>
+    <form id="formPhoto" class="form" hidden>
+      <label>Подпись к фото<input id="fPhotoName" placeholder="Урок 3 стр. 12"></label>
+      <label>Что на фото (汉字)<input id="fPhotoHanzi" lang="zh" placeholder="你好 老师 学生"></label>
+      <label>Перевод<input id="fPhotoMeaning" placeholder="привет, учитель, ученик"></label>
+      <div class="row">
+        <button type="submit" class="btn primary">💾 Сохранить карточку</button>
+        <button type="button" class="btn ghost" id="btnPhotoCancel">Отмена</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- НАПОМИНАНИЕ -->
+  <section class="view" id="view-settings" hidden>
+    <h1 class="view-title">Напоминание каждый час</h1>
+
+    <div class="box">
+      <h2>1. Уведомления в Chrome</h2>
+      <p class="sub" id="notifState">—</p>
+      <div class="row">
+        <button class="btn primary" id="btnNotif">Включить уведомления</button>
+        <button class="btn ghost" id="btnTestNotif" hidden>Проверить сейчас</button>
+      </div>
+    </div>
+
+    <div class="box">
+      <h2>2. Как часто и сколько</h2>
+      <label>Перерыв между напоминаниями
+        <select id="setInterval">
+          <option value="30">каждые 30 минут</option>
+          <option value="60" selected>каждый час</option>
+          <option value="90">каждые 1,5 часа</option>
+          <option value="120">каждые 2 часа</option>
+        </select>
+      </label>
+      <label>Вопросов за одну тренировку
+        <select id="setSize">
+          <option value="5">5</option>
+          <option value="7">7</option>
+          <option value="10" selected>10</option>
+          <option value="15">15</option>
+        </select>
+      </label>
+      <p class="muted small" id="scheduleState"></p>
+    </div>
+
+    <div class="box">
+      <h2>3. Календарь (если Chrome закрыт)</h2>
+      <p class="sub">Google Календарь напомнит даже при заблокированном телефоне.
+        Импортируй файл один раз — будет звонить каждый час.</p>
+      <button class="btn" id="btnIcs">📅 Создать напоминание для календаря</button>
+    </div>
+
+    <div class="box">
+      <h2>4. Копия и перенос</h2>
+      <p class="sub">Прогресс хранится в этом телефоне. Сделай копию, чтобы не потерять.</p>
+      <div class="row">
+        <button class="btn" id="btnExport">⬇️ Скачать копию</button>
+        <button class="btn ghost" id="btnImportFile">⬆️ Восстановить из копии</button>
+        <input type="file" id="importFile" accept=".json,application/json" hidden>
+      </div>
+      <label class="danger"><input type="checkbox" id="setWipe"> Сбросить всё и начать заново</label>
+    </div>
+  </section>
+
+  <div class="sheet" id="sheet" hidden>
+    <div class="sheet-inner">
+      <div class="sheet-head">
+        <strong id="sheetTitle">Карточка</strong>
+        <button class="btn ghost small" id="sheetClose">✕</button>
+      </div>
+      <div id="sheetBody"></div>
+    </div>
+  </div>
+</main>
+
+<nav class="tabbar">
+  <button data-go="home" class="tab active"><span>🏠</span>Главная</button>
+  <button data-go="add" class="tab"><span>＋</span>Добавить</button>
+  <button data-go="settings" class="tab"><span>⏰</span>Час</button>
+</nav>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="seed.js"></script>
+<script src="srs.js"></script>
+<script src="pinyin.js"></script>
+<script src="recognize.js"></script>
+<script src="data/strokes.js"></script>
+<script>
+  // app.js подключаем не напрямую, а вставляем с запасным адресом:
+  // если файл пришёл повреждённым/кэшированным — грузим повторно.
+  (function () {
+    var tried = false;
+    function load() {
+      var s = document.createElement('script');
+      s.src = 'app.js' + (tried ? '?v=' + Date.now() : '');
+      s.onerror = function () {
+        var sub = document.getElementById('homeSub');
+        if (sub) {
+          sub.style.color = '#9e332b';
+          sub.textContent = 'Не удалось загрузить app.js. Проверь, что ноутбук включён, '
+            + 'телефон в той же Wi-Fi, и обнови страницу.';
+        }
+      };
+      s.onload = function () { tried = false; };
+      document.body.appendChild(s);
+      // если после первой попытки приложение так и не стартовало — пробуем ещё раз
+      setTimeout(function () {
+        if (!tried && !window.__HZ_READY__) {
+          tried = true;
+          load();
+        }
+      }, 800);
+    }
+    load();
+  })();
+</script>
+<script>
+  // Если что-то пошло не так до старта приложения — покажем причину на экране.
+  window.addEventListener('error', function (e) {
+    var sub = document.getElementById('homeSub');
+    if (!sub || sub.getAttribute('data-err')) return;
+    sub.setAttribute('data-err', '1');
+    sub.style.color = '#9e332b';
+    sub.textContent = 'Ошибка запуска: ' + (e.message || e) + ' (' + (e.filename || '') + ':' + e.lineno + ')';
+  });
+  setTimeout(function () {
+    var sub = document.getElementById('homeSub');
+    if (sub && sub.textContent.indexOf('Загружаю') >= 0) {
+      sub.style.color = '#9e332b';
+      sub.textContent = 'Приложение не запустилось. Открой страницу в Chrome '
+        + '(не в другом браузере) и обнови: потяни страницу вниз.';
+    }
+  }, 9000);
+</script>
+<script>
+  // Если index.html открыли как обычный файл (file://), браузеру запрещён
+  // доступ к хранилищу и загрузке seed.json — подскажем, что делать.
+  (function () {
+    if (location.protocol !== 'file:') return;
+    var banner = document.createElement('div');
+    banner.style.cssText = 'background:#fbeeec;color:#9e332b;padding:12px 16px;font-size:14px;line-height:1.4;';
+    banner.innerHTML = '⚠️ Файл открыт напрямую (file://), поэтому слова не сохранятся. '
+      + 'Открой ссылку приложения в Chrome, а не файл с диска. Подробности — в ИНСТРУКЦИЯ.md.';
+    document.body.insertBefore(banner, document.body.firstChild);
+  })();
+</script>
+</body>
+</html>
