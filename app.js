@@ -983,16 +983,20 @@
   function bind() {
     // Делегирование: даже если какой-то элемент не найден, кнопки продолжают работать.
     document.addEventListener('click', (e) => {
-      const nav = e.target.closest('[data-go]');
+      const target = e.target && e.target.nodeType === 1 ? e.target : (e.target && e.target.parentElement);
+      if (!target || !target.closest) return;
+      const nav = target.closest('[data-go]');
       if (nav) { e.preventDefault(); go(nav.dataset.go); return; }
 
-      const btn = e.target.closest(
-        '#btnStart, #btnEndSession, #btnCheck, #btnNext, #btnErase, #btnHint, #btnParseList, #btnImport, '
-        + '#btnPhotoCancel, #btnNotif, #btnTestNotif, #btnIcs, #btnExport, #btnImportFile, #sheetClose',
+      const btn = target.closest(
+        '#btnStart, #btnStartBottom, #btnEndSession, #btnCheck, #btnNext, #btnErase, #btnHint, '
+        + '#btnParseList, #btnImport, #btnPhotoCancel, #btnNotif, #btnTestNotif, #btnIcs, '
+        + '#btnExport, #btnImportFile, #sheetClose',
       );
       if (!btn) return;
       switch (btn.id) {
-        case 'btnStart': startSession(); break;
+        case 'btnStart':
+        case 'btnStartBottom': startSession(); return;
         case 'btnEndSession': finishSession(); break;
         case 'btnCheck': checkAnswer(); break;
         case 'btnNext': nextQuestion(); break;
