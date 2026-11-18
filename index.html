@@ -20,13 +20,49 @@
 <main>
   <!-- ГЛАВНАЯ -->
   <section class="view" id="view-home">
+
+    <!-- Кнопка тренировки работает сразу (onclick не зависит от app.js):
+         если код ещё не пришёл — ждёт его 4 секунды и честно говорит об этом. -->
+    <button class="btn primary big" id="btnStart"
+      onclick="window.__hzStart && window.__hzStart();">Начать тренировку</button>
+    <div id="homeMsg" hidden></div>
+
     <div class="hero">
       <h1 id="homeTitle">Тренировка на 60 секунд</h1>
       <p class="sub" id="homeSub">Загружаю слова…</p>
-      <button class="btn primary big" id="btnStart">Начать тренировку</button>
       <!-- аварийная кнопка: работает даже если app.js не загрузился -->
       <button class="btn ghost small" id="btnSelfTest" style="margin-top:10px">Проверка приложения</button>
     </div>
+
+    <script>
+      (function () {
+        var msg = document.getElementById('homeMsg');
+        window.__hzStart = function () {
+          var app = window.__HZ_TEST__;
+          if (app && app.startSession) { app.startSession(); return; }
+          // код приложения не пришёл — ждём до 4 секунд и говорим правду
+          msg.hidden = false;
+          msg.className = 'msg';
+          msg.textContent = 'Загружаю…';
+          var waited = 0;
+          var timer = setInterval(function () {
+            waited += 250;
+            var ready = window.__HZ_TEST__ && window.__HZ_TEST__.startSession;
+            if (ready) {
+              clearInterval(timer);
+              msg.hidden = true;
+              ready();
+              return;
+            }
+            if (waited >= 4000) {
+              clearInterval(timer);
+              msg.textContent = 'Код приложения не загрузился (app.js). '
+                + 'Проверьте интернет и обновите страницу: потяните её вниз.';
+            }
+          }, 250);
+        };
+      })();
+    </script>
 
     <div class="quick">
       <button class="tile" data-go="add"><span class="ti">＋</span>Добавить слово</button>
