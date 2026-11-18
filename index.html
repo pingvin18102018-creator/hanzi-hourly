@@ -24,6 +24,8 @@
       <h1 id="homeTitle">Тренировка на 60 секунд</h1>
       <p class="sub" id="homeSub">Загружаю слова…</p>
       <button class="btn primary big" id="btnStart">Начать тренировку</button>
+      <!-- аварийная кнопка: работает даже если app.js не загрузился -->
+      <button class="btn ghost small" id="btnSelfTest" style="margin-top:10px">Проверка приложения</button>
     </div>
 
     <div class="quick">
@@ -265,6 +267,20 @@
         + '(не в другом браузере) и обнови: потяни страницу вниз.';
     }
   }, 9000);
+
+  // «Проверка приложения»: покажет, на каком шаге всё остановилось.
+  // Работает даже без app.js — поэтому её не может «сломать» ошибка в коде.
+  document.getElementById('btnSelfTest').addEventListener('click', function () {
+    var lines = [];
+    lines.push('Монитор: ' + String(location.href).slice(0, 70));
+    lines.push('Скрипты: ' + (typeof window.SRS) + ' / ' + (typeof window.PinyinCheck) + ' / '
+      + (typeof window.HanziCheck) + ' / STROKES ' + (window.STROKES ? Object.keys(window.STROKES).length : 0));
+    lines.push('Слова встроены: ' + (Array.isArray(window.SEED_WORDS) ? window.SEED_WORDS.length : 'нет'));
+    lines.push('Приложение готово: ' + (window.__HZ_READY__ ? 'да' : 'НЕТ'));
+    lines.push('Подпись: ' + document.getElementById('homeSub').textContent.slice(0, 90));
+    var ok = window.__HZ_READY__ && typeof window.SRS === 'object';
+    window.alert((ok ? '✅ ' : '❌ ') + lines.join('\n'));
+  });
 </script>
 <script>
   // Если index.html открыли как обычный файл (file://), браузеру запрещён
