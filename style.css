@@ -257,3 +257,6 @@ textarea { min-height: 180px; resize: vertical; }
   #pad { background: #23282d; }
   .verdict.ok { color: #9ad1a6; }
 }
+/* вторая кнопка «Начать» под списком слов */
+.start-bottom { margin: 22px 0 8px; }
+.start-bottom .msg { margin-top: 8px; }
