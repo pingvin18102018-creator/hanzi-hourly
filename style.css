@@ -260,3 +260,18 @@ textarea { min-height: 180px; resize: vertical; }
 /* вторая кнопка «Начать» под списком слов */
 .start-bottom { margin: 22px 0 8px; }
 .start-bottom .msg { margin-top: 8px; }
+/* ---------- поле пиньиня ---------- */
+.pinyin-box { margin: 4px 0 8px; }
+.pinyin-box[hidden] { display: none; }
+.pinyin-box label { display: block; color: var(--gray); font-size: 0.82rem; margin-bottom: 4px; }
+.pinyin-box input {
+  width: 100%; box-sizing: border-box;
+  font-size: 1.5rem; padding: 12px 14px; min-height: 56px;
+  border: 2px solid var(--line); border-radius: 14px;
+  background: #fff; color: var(--ink); font-family: inherit;
+}
+.pinyin-box input:focus { outline: none; border-color: var(--red); }
+.write-area[hidden] { display: none; }
+@media (prefers-color-scheme: dark) {
+  .pinyin-box input { background: #23282d; color: var(--ink); }
+}
