@@ -138,5 +138,275 @@ window.SEED_WORDS = [
   "example_zh": "他们很好。",
   "example_ru": "Они в порядке.",
   "note": "他 + 们; смешанная группа. Только женщины — 她们."
+ },
+ {
+  "hanzi": "再见",
+  "pinyin": "zàijiàn",
+  "meaning": "до свидания",
+  "tone": "",
+  "example_zh": "",
+  "example_ru": "",
+  "note": ""
+ },
+ {
+  "hanzi": "是",
+  "pinyin": "shì",
+  "meaning": "быть, являться",
+  "tone": "",
+  "example_zh": "",
+  "example_ru": "",
+  "note": ""
+ },
+ {
+  "hanzi": "不",
+  "pinyin": "bù",
+  "meaning": "нет, не",
+  "tone": "",
+  "example_zh": "",
+  "example_ru": "",
+  "note": ""
+ },
+ {
+  "hanzi": "老师",
+  "pinyin": "lǎoshī",
+  "meaning": "учитель",
+  "tone": "",
+  "example_zh": "",
+  "example_ru": "",
+  "note": ""
+ },
+ {
+  "hanzi": "学生",
+  "pinyin": "xuésheng",
+  "meaning": "студент",
+  "tone": "",
+  "example_zh": "",
+  "example_ru": "",
+  "note": ""
+ },
+ {
+  "hanzi": "妈妈",
+  "pinyin": "māma",
+  "meaning": "мама",
+  "tone": "",
+  "example_zh": "",
+  "example_ru": "",
+  "note": ""
+ },
+ {
+  "hanzi": "爸爸",
+  "pinyin": "bàba",
+  "meaning": "папа",
+  "tone": "",
+  "example_zh": "",
+  "example_ru": "",
+  "note": ""
+ },
+ {
+  "hanzi": "朋友",
+  "pinyin": "péngyou",
+  "meaning": "друг",
+  "tone": "",
+  "example_zh": "",
+  "example_ru": "",
+  "note": ""
+ },
+ {
+  "hanzi": "同学",
+  "pinyin": "tóngxué",
+  "meaning": "одноклассник",
+  "tone": "",
+  "example_zh": "",
+  "example_ru": "",
+  "note": ""
+ },
+ {
+  "hanzi": "的",
+  "pinyin": "de",
+  "meaning": "притяжательная частица",
+  "tone": "",
+  "example_zh": "",
+  "example_ru": "",
+  "note": ""
+ },
+ {
+  "hanzi": "谁",
+  "pinyin": "shéi",
+  "meaning": "кто",
+  "tone": "",
+  "example_zh": "",
+  "example_ru": "",
+  "note": ""
+ },
+ {
+  "hanzi": "我的",
+  "pinyin": "wǒde",
+  "meaning": "мой",
+  "tone": "",
+  "example_zh": "",
+  "example_ru": "",
+  "note": ""
+ },
+ {
+  "hanzi": "你的",
+  "pinyin": "nǐde",
+  "meaning": "твой",
+  "tone": "",
+  "example_zh": "",
+  "example_ru": "",
+  "note": ""
+ },
+ {
+  "hanzi": "他的",
+  "pinyin": "tāde",
+  "meaning": "его",
+  "tone": "",
+  "example_zh": "",
+  "example_ru": "",
+  "note": ""
+ },
+ {
+  "hanzi": "她的",
+  "pinyin": "tāde",
+  "meaning": "её",
+  "tone": "",
+  "example_zh": "",
+  "example_ru": "",
+  "note": ""
+ },
+ {
+  "hanzi": "我们的",
+  "pinyin": "wǒmen de",
+  "meaning": "наш",
+  "tone": "",
+  "example_zh": "",
+  "example_ru": "",
+  "note": ""
+ },
+ {
+  "hanzi": "你们的",
+  "pinyin": "nǐmen de",
+  "meaning": "ваш",
+  "tone": "",
+  "example_zh": "",
+  "example_ru": "",
+  "note": ""
+ },
+ {
+  "hanzi": "他们的",
+  "pinyin": "tāmen de",
+  "meaning": "их",
+  "tone": "",
+  "example_zh": "",
+  "example_ru": "",
+  "note": ""
+ },
+ {
+  "hanzi": "国",
+  "pinyin": "guó",
+  "meaning": "страна",
+  "tone": "",
+  "example_zh": "",
+  "example_ru": "",
+  "note": ""
+ },
+ {
+  "hanzi": "中国",
+  "pinyin": "Zhōngguó",
+  "meaning": "Китай",
+  "tone": "",
+  "example_zh": "",
+  "example_ru": "",
+  "note": ""
+ },
+ {
+  "hanzi": "英国",
+  "pinyin": "Yīngguó",
+  "meaning": "Англия",
+  "tone": "",
+  "example_zh": "",
+  "example_ru": "",
+  "note": ""
+ },
+ {
+  "hanzi": "美国",
+  "pinyin": "Méiguó",
+  "meaning": "Америка",
+  "tone": "",
+  "example_zh": "",
+  "example_ru": "",
+  "note": ""
+ },
+ {
+  "hanzi": "德国",
+  "pinyin": "Déguó",
+  "meaning": "Германия",
+  "tone": "",
+  "example_zh": "",
+  "example_ru": "",
+  "note": ""
+ },
+ {
+  "hanzi": "法国",
+  "pinyin": "Fǎguó",
+  "meaning": "Франция",
+  "tone": "",
+  "example_zh": "",
+  "example_ru": "",
+  "note": ""
+ },
+ {
+  "hanzi": "日本",
+  "pinyin": "Rìběn",
+  "meaning": "Япония",
+  "tone": "",
+  "example_zh": "",
+  "example_ru": "",
+  "note": ""
+ },
+ {
+  "hanzi": "俄罗斯",
+  "pinyin": "Éluósī",
+  "meaning": "Россия",
+  "tone": "",
+  "example_zh": "",
+  "example_ru": "",
+  "note": ""
+ },
+ {
+  "hanzi": "白俄罗斯",
+  "pinyin": "Bái'éluósī",
+  "meaning": "Беларусь",
+  "tone": "",
+  "example_zh": "",
+  "example_ru": "",
+  "note": ""
+ },
+ {
+  "hanzi": "人",
+  "pinyin": "rén",
+  "meaning": "человек",
+  "tone": "",
+  "example_zh": "",
+  "example_ru": "",
+  "note": ""
+ },
+ {
+  "hanzi": "哪",
+  "pinyin": "nǎ",
+  "meaning": "какой (из)",
+  "tone": "",
+  "example_zh": "",
+  "example_ru": "",
+  "note": ""
+ },
+ {
+  "hanzi": "哪国人",
+  "pinyin": "nǎguórén",
+  "meaning": "какой национальности?",
+  "tone": "",
+  "example_zh": "",
+  "example_ru": "",
+  "note": ""
  }
 ];
