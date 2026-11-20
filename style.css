@@ -275,3 +275,22 @@ textarea { min-height: 180px; resize: vertical; }
 @media (prefers-color-scheme: dark) {
   .pinyin-box input { background: #23282d; color: var(--ink); }
 }
+/* ---------- сравнение: мой рисунок и эталон ---------- */
+.compare { display: flex; gap: 10px; margin: 10px 0 4px; }
+.compare[hidden] { display: none; }
+.compare-col { flex: 1; text-align: center; }
+.compare-title { font-size: 0.78rem; color: var(--gray); margin-bottom: 4px; }
+#compareMine, .compare-ref {
+  width: 100%; aspect-ratio: 1 / 1;
+  background: #fff; border: 1.5px solid var(--line); border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+}
+#compareMine { display: block; }
+.compare-ref { font-size: clamp(3rem, 22vw, 6rem); font-family: "Microsoft YaHei", "Noto Sans SC", sans-serif; color: var(--ink); }
+@media (prefers-color-scheme: dark) {
+  #compareMine, .compare-ref { background: #23282d; }
+}
+.compare-ref { flex-direction: column; line-height: 1.15; }
+.compare-hanzi { font-size: clamp(2.6rem, 18vw, 4.5rem); font-weight: 700; }
+.compare-pinyin { font-size: 1.25rem; color: var(--red); margin-top: 2px; }
+.compare-meaning { font-size: 0.95rem; color: var(--ink-soft); margin-top: 2px; }
