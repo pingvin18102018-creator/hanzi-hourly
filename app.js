@@ -269,6 +269,8 @@
   let currentQuestion = null;
   let currentResult = null;
   let choiceOptions = null;
+  // история для «Отмена»: что было до последнего действия (черта/ввод пиньиня)
+  let lastAction = null;
   let answeredCurrent = false;
 
   const PAD_SIZE = 600;  // внутреннее разрешение холста
@@ -288,6 +290,7 @@
     const start = (ev) => {
       if (answeredCurrent) return;
       ev.preventDefault();
+      lastAction = { type: 'pad', strokes: (pad.strokes || []).map((s) => s.slice()) };
       pad.drawing = true;
       pad.strokes.push([toLocal(ev)]);
       drawPad();
@@ -345,6 +348,13 @@
   }
 
   function erasePad() {
+    // на вопросе с пиньинем «Стереть» очищает поле ввода
+    if (currentQuestion && (currentQuestion.kind === 'pinyin' || currentQuestion.kind === 'pinyin_panel')) {
+      lastAction = { type: 'text', value: getPinyinInput() };
+      const inputEl = $('#pinyinInput');
+      if (inputEl) inputEl.value = '';
+      return;
+    }
     if (!pad) return;
     pad.strokes = [];
     drawPad();
@@ -525,6 +535,7 @@
       showVerdict(false, '✍️ Сначала напиши буквы, потом нажми тон');
       return;
     }
+    lastAction = { type: 'text', value: current };
     // тон ставится на нужную гласную в последнем слоге
     input.value = PinyinCheck.placeTone(current, tone);
   }
@@ -533,7 +544,41 @@
   function backspacePinyin() {
     const input = $('#pinyinInput');
     if (!input) return;
+    lastAction = { type: 'text', value: String(input.value || '') };
     input.value = String(input.value || '').slice(0, -1);
+  }
+
+  /* ================= отмена последнего действия ================= */
+
+  /**
+   * Возвращает то, что было до последнего действия:
+   * убирает последнюю нарисованную черту или откатывает последнюю букву/тон.
+   */
+  function undoLast() {
+    if (answeredCurrent) return;
+    if (!lastAction) {
+      // истории нет — тогда просто убираем последнюю черту, если она есть
+      if (pad && pad.strokes.length) {
+        lastAction = { type: 'pad', strokes: pad.strokes.map((s) => s.slice()) };
+      } else {
+        showVerdict(false, '↶ Нечего отменять');
+        return;
+      }
+    }
+    if (lastAction.type === 'pad') {
+      // откат холста: убираем последнюю черту
+      if (pad) {
+        pad.strokes = lastAction.strokes.length ? lastAction.strokes.slice(0, -1) : [];
+        drawPad();
+      }
+    } else if (lastAction.type === 'text') {
+      const input = $('#pinyinInput');
+      if (input) input.value = lastAction.value;
+    }
+    lastAction = null;
+    // прячем старый вердикт, чтобы экран был чистым
+    const v = $('#verdict');
+    if (v) { v.hidden = true; v.textContent = ''; }
   }
 
   /* ================= выбор из 4 вариантов ================= */
@@ -1151,7 +1196,7 @@
       if (nav) { e.preventDefault(); go(nav.dataset.go); return; }
 
       const btn = target.closest(
-        '#btnStart, #btnStartBottom, #btnEndSession, #btnCheck, #btnNext, #btnErase, #btnHint, '
+        '#btnStart, #btnStartBottom, #btnEndSession, #btnCheck, #btnNext, #btnErase, #btnUndo, #btnHint, '
         + '#btnParseList, #btnImport, #btnPhotoCancel, #btnNotif, #btnTestNotif, #btnIcs, '
         + '#btnExport, #btnImportFile',
       );
@@ -1162,7 +1207,8 @@
         case 'btnEndSession': finishSession(); break;
         case 'btnCheck': checkAnswer(); break;
         case 'btnNext': nextQuestion(); break;
-        case 'btnErase': erasePad(); break;
+        case 'btnErase': erasePad(); lastAction = null; break;
+        case 'btnUndo': undoLast(); break;
         case 'btnHint': showHint(); break;
         case 'btnParseList': parseListText(); break;
         case 'btnImport': doImport(); break;
@@ -1301,9 +1347,10 @@
       mediansOf(card) { return mediansFor(card); },
       submitAdd, parseListText, doImport, submitPhoto, exportJson, importJsonFile,
       buildIcs, saveSetting, scheduleNext, reasonAbout: reminderBody,
-      chooseOption, applyTone, backspacePinyin,
+      chooseOption, applyTone, backspacePinyin, undoLast,
       debug: { db, tx, all, put },
       setPendingPhoto(v) { pendingPhoto = v; },
+      getPad() { return pad; },
       setPadStrokes(s) { if (pad) { pad.strokes = s; drawPad(); } },
       get pad() { return pad; },
       get currentQuestion() { return currentQuestion; },
