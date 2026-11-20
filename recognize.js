@@ -58,6 +58,29 @@
   }
 
   /**
+   * Грубые «ворота»: где на холсте нарисовано, не уехало ли всё в угол.
+   * Игла в нормальных условиях рисует в центре — так отсекаем чужие каракули.
+   */
+  function userBounds(strokes, box) {
+    const b = box || { x: 0, y: 0, size: 1 };
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    (strokes || []).forEach((stroke) => {
+      stroke.forEach((p) => {
+        const x = ((p.x - b.x) / b.size);
+        const y = ((p.y - b.y) / b.size);
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x);
+        maxY = Math.max(maxY, y);
+      });
+    });
+    return { minX, minY, maxX, maxY, cx: (minX + maxX) / 2, cy: (minY + maxY) / 2 };
+  }
+
+  /**
    * Полный рисунок → список черт для сравнения.
    * Короткие штрихи (палец может оставить «точку») тоже считаются:
    * лучше потом простить лишнюю короткую черту, чем потерять настоящую.
@@ -214,11 +237,16 @@
     const refLen = ref.reduce((a, r) => a + r.len, 0);
     const userLen = raw.reduce((a, u) => a + u.len, 0);
     const lenRatio = refLen > 0 ? userLen / refLen : 0;
-    // если общая длина черт сильно меньше эталона — это не иероглиф
-    const lenOk = lenRatio > 0.55 && lenRatio < 1.8;
+    // Не требуем большей части длины: люди пишут черты короче и «не до конца».
+    // Каракули отсекаем по общей длине — они намного короче эталона.
+    const lenOk = lenRatio > 0.25 && lenRatio < 2.0;
     // битая ссылка на массив перевёрнутых — считаем, что данных нет
     const reversedCount = typeof best.reversed === 'number' ? best.reversed : 0;
-    const ok = lenOk && reversedCount === 0 && raw.length === ref.length && score <= threshold;
+    // Если рисунок целиком уехал далеко к краю холста — это не письмо в рамке.
+    const bounds = userBounds(strokes, box);
+    const offCenter = Math.hypot(bounds.cx - 0.5, bounds.cy - 0.5) > 0.42;
+    const ok = lenOk && reversedCount === 0 && !offCenter
+      && raw.length === ref.length && score <= threshold;
 
     return {
       ok,
