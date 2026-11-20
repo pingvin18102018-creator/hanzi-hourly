@@ -258,7 +258,7 @@
       li.querySelector('.py').textContent = c.pinyin || '';
       li.querySelector('.ru').textContent = c.meaning || '';
       li.querySelector('.when').textContent = SRS.isDue(c, now) ? 'сейчас' : SRS.describeDue(c.due, now);
-      li.addEventListener('click', () => openCardSheet(c));
+      // касание по слову в списке ничего не открывает: кнопка тренировки — сверху
       list.appendChild(li);
     });
   }
@@ -395,6 +395,8 @@
     return { id: card.id, type, prompt: q.prompt, ask: q.ask, kind: q.kind };
   }
 
+  // Кнопка «Начать тренировку» должна работать всегда: если сюда попали —
+  // значит код загрузился, и тренировка обязана открыться.
   function startSession() {
     if (!cards.filter((c) => !c.archived).length) { go('add'); return; }
     const size = SRS.sessionSize(cards, settings.sessionSize);
@@ -714,56 +716,10 @@
   }
 
   // =================== карточка слова ===================
-  function openCardSheet(card) {
-    $('#sheetTitle').textContent = card.hanzi;
-    const body = $('#sheetBody');
-    body.innerHTML = `
-      <p class="muted small">Ступень ${card.stage || 0} из ${SRS.MAX_STAGE} · ждёт: ${SRS.describeDue(card.due, Date.now())}</p>
-      <form class="form" id="sheetForm">
-        <label>Иероглиф<input name="hanzi" lang="zh"></label>
-        <label>Пиньинь<input name="pinyin"></label>
-        <label>Перевод<input name="meaning"></label>
-        <label>Пример (китайский)<input name="example_zh" lang="zh"></label>
-        <label>Пример (перевод)<input name="example_ru"></label>
-        <label>Заметка<input name="note"></label>
-        <div class="row">
-          <button type="submit" class="btn primary">💾 Сохранить</button>
-          <button type="button" class="btn ghost" id="sheetNow">🔔 Сейчас</button>
-          <button type="button" class="btn ghost" id="sheetDel" style="color:var(--red-dark)">🗑 Удалить</button>
-        </div>
-      </form>`;
-    const f = body.querySelector('#sheetForm');
-    ['hanzi', 'pinyin', 'meaning', 'example_zh', 'example_ru', 'note'].forEach((k) => { f[k].value = card[k] || ''; });
-    f.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const updated = { ...card };
-      ['hanzi', 'pinyin', 'meaning', 'example_zh', 'example_ru', 'note'].forEach((k) => { updated[k] = f[k].value.trim(); });
-      await storePut('cards', updated);
-      const i = cards.findIndex((c) => c.id === card.id);
-      if (i >= 0) cards[i] = updated;
-      closeSheet();
-      toast('Сохранено');
-      renderHome();
-    });
-    body.querySelector('#sheetNow').addEventListener('click', async () => {
-      const updated = { ...card, due: Date.now() };
-      await storePut('cards', updated);
-      const i = cards.findIndex((c) => c.id === card.id);
-      if (i >= 0) cards[i] = updated;
-      closeSheet();
-      startSession();
-    });
-    body.querySelector('#sheetDel').addEventListener('click', async () => {
-      await storeDel('cards', card.id);
-      cards = cards.filter((c) => c.id !== card.id);
-      closeSheet();
-      toast('Удалено');
-      renderHome();
-    });
-    $('#sheet').hidden = false;
-  }
+  // Шторка «Карточка» удалена — именно она перекрывала экран и «съедала» нажатия.
+  function openCardSheet() { /* больше не используется */ }
 
-  function closeSheet() { $('#sheet').hidden = true; }
+  function closeSheet() { /* больше не используется */ }
 
   // =================== добавление ===================
   async function addCard(data) {
@@ -991,7 +947,7 @@
       const btn = target.closest(
         '#btnStart, #btnStartBottom, #btnEndSession, #btnCheck, #btnNext, #btnErase, #btnHint, '
         + '#btnParseList, #btnImport, #btnPhotoCancel, #btnNotif, #btnTestNotif, #btnIcs, '
-        + '#btnExport, #btnImportFile, #sheetClose',
+        + '#btnExport, #btnImportFile',
       );
       if (!btn) return;
       switch (btn.id) {
@@ -1014,7 +970,6 @@
         case 'btnIcs': downloadIcs(); break;
         case 'btnExport': exportJson(); break;
         case 'btnImportFile': $('#importFile').click(); break;
-        case 'sheetClose': closeSheet(); break;
         default: break;
       }
     });
@@ -1041,7 +996,6 @@
       if (confirm('Удалить все слова и прогресс?')) wipeAll();
       else e.target.checked = false;
     });
-    on('#sheet', 'click', (e) => { if (e.target.id === 'sheet') closeSheet(); });
 
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState !== 'visible') return;
