@@ -441,9 +441,29 @@
     $('#btnErase').hidden = false;
     $('#btnHint').hidden = false;
     $('#btnCheck').textContent = 'Проверить';
-    $('#padHint').textContent = q.kind === 'pinyin' ? 'напиши пиньинь пальцем' : 'напиши иероглиф пальцем';
+
+    // для вопроса на пиньинь показываем поле ввода вместо холста
+    const isPinyin = q.kind === 'pinyin';
+    const box = $('#pinyinBox');
+    const input = $('#pinyinInput');
+    const area = document.querySelector('.write-area');
+    if (box) box.hidden = !isPinyin;
+    if (area) area.hidden = isPinyin;
+    if (input) {
+      input.value = '';
+      if (isPinyin) setTimeout(() => { try { input.focus(); } catch (e) { /* ignore */ } }, 150);
+    }
+    if ($('#padHint')) {
+      $('#padHint').textContent = isPinyin ? '' : 'напиши иероглиф пальцем';
+    }
 
     initPad();
+  }
+
+  /** Что введено в поле пиньиня. */
+  function getPinyinInput() {
+    const input = $('#pinyinInput');
+    return input ? String(input.value || '').trim() : '';
   }
 
   /** Проверка ответа — без звука, только текст на экране. */
@@ -457,9 +477,13 @@
     let result;
 
     if (q.kind === 'pinyin') {
-      // пиньинь пальцем не распознать — просим набрать и показываем ответ
-      const typed = window.prompt('Набери пиньинь:', '');
-      if (typed == null) return;
+      // пиньинь нельзя распознать пальцем — вводится в поле прямо на экране
+      // (без system-окна: на телефоне оно часто закрывается и ответ теряется)
+      const typed = getPinyinInput();
+      if (!typed) {
+        showVerdict(false, '✍️ Напиши пиньинь в поле на экране, потом нажми «Проверить»');
+        return;
+      }
       result = PinyinCheck.compare(typed, card.pinyin);
       verdict = PinyinCheck.verdict(result);
     } else {
