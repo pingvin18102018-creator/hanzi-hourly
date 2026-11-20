@@ -437,8 +437,7 @@
     $('#verdict').textContent = '';
     $('#answer').hidden = true;
     $('#answerActions').hidden = true;
-    const compareBox = $('#compare');
-    if (compareBox) compareBox.hidden = true;
+    hideCompare();
     $('#btnCheck').hidden = false;
     $('#btnErase').hidden = false;
     $('#btnHint').hidden = false;
@@ -521,21 +520,24 @@
    * Если пиньинь неверный — справа ещё и правильный пиньинь.
    */
   function showCompare(card, q) {
-    const box = $('#compare');
-    const mine = $('#compareMine');
+    const refCol = $('#boardRef');
     const ref = $('#compareRef');
-    if (!box) return;
+    const mineLabel = $('#mineLabel');
+    if (!refCol || !ref) return;
 
-    const drawn = q.kind !== 'pinyin' && pad && pad.strokes.length > 0;
-    if (mine) {
-      mine.hidden = !drawn;
-      if (drawn) copyPadTo(mine);
-    }
-    if (ref) {
-      ref.innerHTML = '';
-      ref.appendChild(makeAnswerText(card, q));
-    }
-    box.hidden = false;
+    // «как надо» становится справа от холста — ничего не надо листать
+    ref.innerHTML = '';
+    ref.appendChild(makeAnswerText(card, q));
+    refCol.hidden = false;
+    if (mineLabel) mineLabel.hidden = false;
+  }
+
+  /** Убирает вторую колонку: холст снова на всю ширину. */
+  function hideCompare() {
+    const refCol = $('#boardRef');
+    const mineLabel = $('#mineLabel');
+    if (refCol) refCol.hidden = true;
+    if (mineLabel) mineLabel.hidden = true;
   }
 
   /** Печатает правильный ответ: иероглиф крупно и пиньинь под ним. */
@@ -578,10 +580,10 @@
   }
 
   function showAnswerDetails(card, result) {
-    $('#ansHanzi').textContent = card.hanzi;
-    $('#ansPinyin').textContent = card.pinyin || '';
-    $('#ansMeaning').textContent = card.meaning || '';
-    const expected = result && result.expected ? `Правильно: ${result.expected}` : '';
+    // иероглиф, пиньинь и перевод уже показаны в колонке «как надо» — здесь только пример и заметка
+    const expected = result && result.expected && result.result !== 'correct'
+      ? `Правильно: ${result.expected}`
+      : '';
     $('#ansExample').textContent = [expected, card.example_zh, card.example_ru].filter(Boolean).join(' · ');
     $('#ansNote').textContent = card.note || '';
     $('#answer').hidden = false;
