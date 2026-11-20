@@ -129,6 +129,13 @@
       <canvas id="hintLayer" width="600" height="600" hidden aria-hidden="true"></canvas>
     </div>
 
+    <!-- поле для пиньиня: всегда на экране, без системных окон -->
+    <div class="pinyin-box" id="pinyinBox" hidden>
+      <label for="pinyinInput">Пиньинь с тонами (можно без них)</label>
+      <input id="pinyinInput" type="text" inputmode="latin" autocapitalize="off"
+             autocorrect="off" spellcheck="false" enterkeyhint="done" placeholder="nǐ hǎo">
+    </div>
+
     <div class="verdict" id="verdict" hidden></div>
 
     <div class="pad-actions">
