@@ -361,14 +361,13 @@ textarea { min-height: 180px; resize: vertical; }
   .compare-ref { background: #23282d; }
 }
 /* ---------- панель тонов ---------- */
-.tone-panel { flex: 0 0 auto; margin: 6px 0 4px; }
+.tone-panel { flex: 0 0 auto; margin: 6px 0 4px; overflow-x: hidden; }
 .tone-panel[hidden] { display: none; }
-.tone-row { display: flex; gap: 4px; margin-bottom: 4px; }
+.tone-row { display: flex; gap: 3px; margin-bottom: 3px; }
 .tone-btn {
-  flex: 1 1 0; min-width: 0;
-  min-height: 44px;
+  flex: 1 1 0; min-width: 0; min-height: 40px;
   display: flex; align-items: center; justify-content: center;
-  font-family: inherit; font-size: 1.15rem; font-weight: 600;
+  font-family: inherit; font-size: 1rem; font-weight: 600;
   color: var(--ink); background: #fff;
   border: 1.5px solid var(--line); border-radius: 10px;
   padding: 0 2px;
