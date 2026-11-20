@@ -9,6 +9,7 @@
   const DB_VERSION = 1;
   const DEFAULT_SETTINGS = {
     intervalMin: 60,      // перерыв между напоминаниями
+    pinyinMode: 'both',   // both | panel | choice — как проверять пиньинь
     sessionSize: 10,      // карточек (вопросов) за тренировку
     nextAt: 0,            // когда напомнить в следующий раз
     installedAt: 0,
@@ -267,6 +268,7 @@
   let pad = null;        // { canvas, ctx, strokes, drawing }
   let currentQuestion = null;
   let currentResult = null;
+  let choiceOptions = null;
   let answeredCurrent = false;
 
   const PAD_SIZE = 600;  // внутреннее разрешение холста
@@ -390,7 +392,9 @@
 
   /** Задание на текущий вопрос. */
   function buildQuestion(card, prevType) {
-    const type = SRS.pickQuestionType(card, Math.random, prevType);
+    let type = SRS.pickQuestionType(card, Math.random, prevType);
+    // если выбран тип «по иероглифу → пиньинь», заменяем его на выбранный режим
+    if (type === 'hanzi_to_pinyin') type = SRS.pinyinTypeFor(settings.pinyinMode, Math.random);
     const q = SRS.questionFor(card, type);
     return { id: card.id, type, prompt: q.prompt, ask: q.ask, kind: q.kind };
   }
@@ -443,22 +447,139 @@
     $('#btnHint').hidden = false;
     $('#btnCheck').textContent = 'Проверить';
 
-    // для вопроса на пиньинь показываем поле ввода вместо холста
-    const isPinyin = q.kind === 'pinyin';
+    // для вопроса на пиньинь: поле ввода (+ панель тонов) или 4 варианта — вместо холста
+    const isPinyin = q.kind === 'pinyin' || q.kind === 'pinyin_panel';
+    const isChoice = q.kind === 'pinyin_choice';
     const box = $('#pinyinBox');
     const input = $('#pinyinInput');
     const area = document.querySelector('.write-area');
+    const tonePanel = $('#tonePanel');
+    const choiceList = $('#choiceList');
     if (box) box.hidden = !isPinyin;
-    if (area) area.hidden = isPinyin;
+    if (area) area.hidden = isPinyin || isChoice;
+    if (tonePanel) {
+      tonePanel.hidden = q.kind !== 'pinyin_panel';
+      if (q.kind === 'pinyin_panel') buildTonePanel();
+    }
+    if (choiceList) {
+      choiceList.hidden = !isChoice;
+      if (isChoice) buildChoices();
+    }
     if (input) {
       input.value = '';
       if (isPinyin) setTimeout(() => { try { input.focus(); } catch (e) { /* ignore */ } }, 150);
     }
     if ($('#padHint')) {
-      $('#padHint').textContent = isPinyin ? '' : 'напиши иероглиф пальцем';
+      $('#padHint').textContent = isPinyin || isChoice ? '' : 'напиши иероглиф пальцем';
+    }
+    // кнопка проверки не нужна там, где ответ выбирается касанием
+    if (isChoice) {
+      $('#btnCheck').hidden = true;
+      $('#btnErase').hidden = true;
     }
 
     initPad();
+  }
+
+  /* ================= панель тонов ================= */
+
+  /** Три строки кнопок: a, e, i / o, u, ü. */
+  function buildTonePanel() {
+    const rows = [
+      ['a', 'e', 'i'],
+      ['o', 'u', 'ü'],
+    ];
+    const container = $('#tonePanel');
+    if (!container) return;
+    container.innerHTML = '';
+    rows.forEach((group) => {
+      const row = document.createElement('div');
+      row.className = 'tone-row';
+      group.forEach((vowel) => {
+        for (let tone = 1; tone <= 4; tone += 1) {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'tone-btn';
+          btn.dataset.base = vowel;
+          btn.dataset.tone = String(tone);
+          btn.textContent = PinyinCheck.accented(vowel, tone);
+          row.appendChild(btn);
+        }
+      });
+      const back = document.createElement('button');
+      back.type = 'button';
+      back.className = 'tone-btn tone-back';
+      back.id = 'btnBackspace';
+      back.textContent = '⌫';
+      row.appendChild(back);
+      container.appendChild(row);
+    });
+  }
+
+  /** Нажатие на «ā» ставит тон 1 на гласную a в поле, и т. д. */
+  function applyTone(vowel, tone) {
+    const input = $('#pinyinInput');
+    if (!input) return;
+    const current = String(input.value || '');
+    if (!current.trim()) {
+      showVerdict(false, '✍️ Сначала напиши буквы, потом нажми тон');
+      return;
+    }
+    // тон ставится на нужную гласную в последнем слоге
+    input.value = PinyinCheck.placeTone(current, tone);
+  }
+
+  /** Стёрка: убирает последний символ. */
+  function backspacePinyin() {
+    const input = $('#pinyinInput');
+    if (!input) return;
+    input.value = String(input.value || '').slice(0, -1);
+  }
+
+  /* ================= выбор из 4 вариантов ================= */
+
+  function buildChoices() {
+    const list = $('#choiceList');
+    const q = currentQuestion;
+    const card = q && cardById(q.id);
+    if (!list || !card) return;
+    const built = PinyinCheck.toneOptions(card.pinyin);
+    choiceOptions = { right: built.right, options: built.options };
+    list.innerHTML = '';
+    built.options.forEach((option) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'choice-btn';
+      btn.dataset.value = option;
+      btn.textContent = option;
+      list.appendChild(btn);
+    });
+  }
+
+  /** Ответ на вопрос с 4 вариантами: проверяем касанием, без кнопки «Проверить». */
+  function chooseOption(value) {
+    const q = currentQuestion;
+    if (!q || answeredCurrent || !choiceOptions) return;
+    const card = cardById(q.id);
+    if (!card) return;
+    const ok = value === choiceOptions.right;
+    answeredCurrent = true;
+
+    // подсветка выбранного и правильного
+    const list = $('#choiceList');
+    if (list) {
+      Array.from(list.querySelectorAll('.choice-btn')).forEach((btn) => {
+        if (btn.dataset.value === value) btn.classList.add(ok ? 'choice-ok' : 'choice-bad');
+        if (!ok && btn.dataset.value === choiceOptions.right) btn.classList.add('choice-ok');
+      });
+    }
+
+    const result = { result: ok ? 'correct' : 'wrong', expected: choiceOptions.right };
+    showVerdict(ok, ok ? '✅ Правильно' : '❌ Неверно');
+    showCompare(card, q);
+    showAnswerDetails(card, result);
+    countAnswer(card, ok);
+    storePut('cards', cards.find((c) => c.id === card.id)).catch((e) => console.warn('не сохранилось', e));
   }
 
   /** Что введено в поле пиньиня. */
@@ -477,7 +598,7 @@
     let verdict;
     let result;
 
-    if (q.kind === 'pinyin') {
+    if (q.kind === 'pinyin' || q.kind === 'pinyin_panel') {
       // пиньинь нельзя распознать пальцем — вводится в поле прямо на экране
       // (без system-окна: на телефоне оно часто закрывается и ответ теряется)
       const typed = getPinyinInput();
@@ -781,6 +902,7 @@
     }
     $('#setInterval').value = String(settings.intervalMin);
     $('#setSize').value = String(settings.sessionSize);
+    if ($('#setPinyinMode')) $('#setPinyinMode').value = settings.pinyinMode || 'both';
     renderScheduleState();
   }
 
@@ -1058,6 +1180,26 @@
       }
     });
 
+    // панель тонов: кнопки с гласными и знаком тона
+    document.addEventListener('click', (e) => {
+      const target = e.target && e.target.nodeType === 1 ? e.target : (e.target && e.target.parentElement);
+      if (!target || !target.closest) return;
+      const toneBtn = target.closest('.tone-btn');
+      if (toneBtn) {
+        e.preventDefault();
+        if (toneBtn.id === 'btnBackspace') { backspacePinyin(); return; }
+        applyTone(toneBtn.dataset.base, Number(toneBtn.dataset.tone));
+        return;
+      }
+      const choiceBtn = target.closest('.choice-btn');
+      if (choiceBtn) {
+        e.preventDefault();
+        chooseOption(choiceBtn.dataset.value);
+      }
+    });
+
+    on('#setPinyinMode', 'change', (e) => saveSetting('pinyinMode', e.target.value));
+
     // письмо от руки: холст подключается один раз, дальше — кнопки
     initPad();
 
@@ -1159,6 +1301,7 @@
       mediansOf(card) { return mediansFor(card); },
       submitAdd, parseListText, doImport, submitPhoto, exportJson, importJsonFile,
       buildIcs, saveSetting, scheduleNext, reasonAbout: reminderBody,
+      chooseOption, applyTone, backspacePinyin,
       debug: { db, tx, all, put },
       setPendingPhoto(v) { pendingPhoto = v; },
       setPadStrokes(s) { if (pad) { pad.strokes = s; drawPad(); } },
