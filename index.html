@@ -144,6 +144,18 @@
       <button class="btn ghost" id="btnHint">💡 Подсказка</button>
     </div>
 
+    <!-- После «Проверить»: твой рисунок и рядом правильно напечатанный иероглиф -->
+    <div class="compare" id="compare" hidden>
+      <div class="compare-col">
+        <div class="compare-title">твой рисунок</div>
+        <canvas id="compareMine" width="300" height="300"></canvas>
+      </div>
+      <div class="compare-col">
+        <div class="compare-title">как надо</div>
+        <div class="compare-ref" id="compareRef"></div>
+      </div>
+    </div>
+
     <div class="actions" id="answerActions" hidden>
       <button class="btn big" id="btnNext">Дальше →</button>
     </div>
