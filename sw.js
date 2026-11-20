@@ -1,7 +1,7 @@
 /* Офлайн-режим и уведомления.
  * Кэшируем сам сайт, чтобы приложение открывалось без интернета.
  */
-const VERSION = 'hz-hourly-v6';
+const VERSION = 'hz-hourly-v7';
 const ASSETS = [
   './',
   'index.html',
