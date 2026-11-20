@@ -57,22 +57,30 @@
     return pts.length > 1 ? pts : [];
   }
 
-  /** Полный рисунок → список черт для сравнения. */
+  /**
+   * Полный рисунок → список черт для сравнения.
+   * Короткие штрихи (палец может оставить «точку») тоже считаются:
+   * лучше потом простить лишнюю короткую черту, чем потерять настоящую.
+   */
   function prepareUser(strokes, box) {
     return (strokes || [])
       .map((s) => normalizeStroke(s, box))
-      .filter((pts) => pts.length > 1)
+      .filter((pts) => pts.length >= 1)
       .map(summarizeStroke);
   }
 
   /* ---------- сопоставление черт ---------- */
+  // Живой почерк: форма и направление важнее, чем точное место начала черты.
+  // Раньше «где начата/закончена» давало 50% оценки — правильно написанный
+  // иероглиф со сдвигом на пару миллиметров считался ошибкой.
   const W = {
-    count: 0.30,   // число черт важнее всего
-    start: 0.26,   // где начата черта (порядок и место)
-    end: 0.24,     // где закончена
-    angle: 0.16,   // направление
-    shape: 0.10,   // близость по ходу черты (мягко: у живого письма кривизна)
+    start: 0.12,   // где начата черта (мягко)
+    end: 0.12,     // где закончена (мягко)
+    angle: 0.30,   // направление черты — главное (перевёрнутая черта = ошибка)
+    shape: 0.16,   // близость по ходу черты
   };
+  // Допустимый сдвиг всего иероглифа на холсте, в долях площадки.
+  const SHIFT_TOLERANCE = 0.30;
 
   function distance(a, b) {
     return Math.hypot(a.x - b.x, a.y - b.y) / SIZE;
@@ -101,6 +109,12 @@
   }
 
   /** Стоимость сопоставления одной моей черты с одной эталонной (0 = идеально). */
+  /** Насколько черта написана «не в ту сторону» (0 — правильно, 1 — наоборот). */
+  function reverseScore(u, r) {
+    // Угол ~180° значит, что черта написана от конца к началу.
+    return angleDiff(u.angle, r.angle) > 0.5 ? 1 : 0;
+  }
+
   function strokeCost(u, r) {
     return W.start * distance(u.start, r.start)
       + W.end * distance(u.end, r.end)
@@ -111,6 +125,7 @@
   /** Жадное сопоставление: самая дешёвая пара, затем следующая. */
   function match(user, ref) {
     const usedR = new Set();
+    let reversed = 0;
     const total = user.reduce((acc, u) => {
       let best = Infinity;
       let bestI = -1;
@@ -119,10 +134,14 @@
         const c = strokeCost(u, r);
         if (c < best) { best = c; bestI = i; }
       });
-      if (bestI >= 0) usedR.add(bestI);
+      if (bestI >= 0) {
+        usedR.add(bestI);
+        if (reverseScore(u, ref[bestI])) reversed += 1;
+      }
       return acc + (Number.isFinite(best) ? best : 1);
     }, 0);
-    return total / Math.max(1, user.length);
+    // Любая черта, написанная «наоборот», — ошибка, а не «немного похоже».
+    return { cost: total / Math.max(1, user.length), reversed };
   }
 
   /**
@@ -131,31 +150,87 @@
    * box     — квадрат «площадки для письма» на холсте;
    * medians — эталонные черты (из assets/<иероглиф>.json).
    *
-   * Возвращает { ok, score, missing, extra, reference, user } — reference и user
-   * нужны, чтобы нарисовать подсказку «где ошибка».
+   * Сначала пробуем совместить весь рисунок с эталоном со сдвигом
+   * (человек пишет не точно по центру). Берём лучший из вариантов.
    */
   function compare(strokes, box, medians, options) {
     const opts = options || {};
-    const threshold = typeof opts.threshold === 'number' ? opts.threshold : 0.24;
+    const threshold = typeof opts.threshold === 'number' ? opts.threshold : 0.38;
     const ref = referenceFromMedians(medians);
-    const user = prepareUser(strokes, box);
-    let score = 1;
-    let countPenalty = 0;
-    if (ref.length && user.length) {
-      if (user.length !== ref.length) countPenalty = Math.min(0.35, Math.abs(user.length - ref.length) * 0.16);
-      score = Math.min(1, match(user, ref) + countPenalty);
+    const raw = prepareUser(strokes, box);
+    if (!ref.length || !raw.length) {
+      return {
+        ok: false,
+        score: 1,
+        threshold,
+        userCount: raw.length,
+        refCount: ref.length,
+        missing: Math.max(0, ref.length - raw.length),
+        extra: Math.max(0, raw.length - ref.length),
+        reference: null,
+        expected: ref,
+        shift: { x: 0, y: 0 },
+      };
     }
-    const ok = ref.length > 0 && user.length > 0 && user.length === ref.length && score <= threshold;
+
+    // Пробуем сдвинуть рисунок в пределах SHIFT_TOLERANCE и выбрать лучшее совпадение.
+    const shiftPx = SIZE * SHIFT_TOLERANCE;
+    const best = { score: Infinity, reversed: 0, shift: { x: 0, y: 0 }, user: raw };
+    const steps = [-1, -0.6, -0.3, 0, 0.3, 0.6, 1];
+    steps.forEach((sx) => {
+      steps.forEach((sy) => {
+        const dx = sx * shiftPx;
+        const dy = sy * shiftPx;
+        const moved = raw.map((u) => ({
+          ...u,
+          start: { x: u.start.x + dx, y: u.start.y + dy },
+          end: { x: u.end.x + dx, y: u.end.y + dy },
+          points: u.points.map((p) => ({ x: p.x + dx, y: p.y + dy })),
+        }));
+        const m = match(moved, ref);
+        // лучшее совпадение = меньше всего перевёрнутых черт, затем меньше стоимость
+        const better = m.cost < best.score
+          || (Math.abs(m.cost - best.score) < 0.02 && m.reversed < best.reversed);
+        if (better) {
+          best.score = m.cost;
+          best.reversed = m.reversed;
+          best.shift = { x: dx, y: dy };
+          best.user = moved;
+        }
+      });
+    });
+
+    // штраф за неверное число черт
+    const countPenalty = raw.length === ref.length
+      ? 0
+      : Math.min(0.35, Math.abs(raw.length - ref.length) * 0.16);
+    const shiftRatio = Math.hypot(best.shift.x, best.shift.y) / (SIZE * SHIFT_TOLERANCE);
+    const shiftPenalty = Math.min(0.20, Math.max(0, shiftRatio - 0.6) * 0.3);
+    // перевёрнутая черта — не «немного неточно», а ошибка
+    const reversePenalty = Math.min(1, best.reversed * 0.5);
+    const score = Math.min(1, best.score + countPenalty + shiftPenalty + reversePenalty);
+    // Порог зависит от того, насколько рисунок «похож по масштабу»:
+    // каракули короткими штрихами не должны проскакивать.
+    const refLen = ref.reduce((a, r) => a + r.len, 0);
+    const userLen = raw.reduce((a, u) => a + u.len, 0);
+    const lenRatio = refLen > 0 ? userLen / refLen : 0;
+    // если общая длина черт сильно меньше эталона — это не иероглиф
+    const lenOk = lenRatio > 0.55 && lenRatio < 1.8;
+    // битая ссылка на массив перевёрнутых — считаем, что данных нет
+    const reversedCount = typeof best.reversed === 'number' ? best.reversed : 0;
+    const ok = lenOk && reversedCount === 0 && raw.length === ref.length && score <= threshold;
+
     return {
       ok,
       score,
       threshold,
-      userCount: user.length,
+      userCount: raw.length,
       refCount: ref.length,
-      missing: Math.max(0, ref.length - user.length),
-      extra: Math.max(0, user.length - ref.length),
-      reference: opts.withReference === false ? null : user,
+      missing: Math.max(0, ref.length - raw.length),
+      extra: Math.max(0, raw.length - ref.length),
+      reference: opts.withReference === false ? null : raw,
       expected: ref,
+      shift: best.shift,
     };
   }
 
