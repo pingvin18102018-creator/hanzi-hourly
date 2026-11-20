@@ -437,6 +437,8 @@
     $('#verdict').textContent = '';
     $('#answer').hidden = true;
     $('#answerActions').hidden = true;
+    const compareBox = $('#compare');
+    if (compareBox) compareBox.hidden = true;
     $('#btnCheck').hidden = false;
     $('#btnErase').hidden = false;
     $('#btnHint').hidden = false;
@@ -506,10 +508,66 @@
     currentResult = { q, card, result, verdict };
     answeredCurrent = true;
     showVerdict(verdict.ok, verdict.text);
+    // главное: рядом с моим рисунком показать правильно напечатанный иероглиф
+    showCompare(card, q);
     showAnswerDetails(card, result);
     // считаем ответ сразу, на диск пишем в фоне
     countAnswer(card, verdict.ok);
     storePut('cards', cards.find((c) => c.id === card.id)).catch((e) => console.warn('не сохранилось', e));
+  }
+
+  /**
+   * Сравнение: слева мой рисунок (если писал), справа правильно напечатанный иероглиф.
+   * Если пиньинь неверный — справа ещё и правильный пиньинь.
+   */
+  function showCompare(card, q) {
+    const box = $('#compare');
+    const mine = $('#compareMine');
+    const ref = $('#compareRef');
+    if (!box) return;
+
+    const drawn = q.kind !== 'pinyin' && pad && pad.strokes.length > 0;
+    if (mine) {
+      mine.hidden = !drawn;
+      if (drawn) copyPadTo(mine);
+    }
+    if (ref) {
+      ref.innerHTML = '';
+      ref.appendChild(makeAnswerText(card, q));
+    }
+    box.hidden = false;
+  }
+
+  /** Печатает правильный ответ: иероглиф крупно и пиньинь под ним. */
+  function makeAnswerText(card, q) {
+    const wrap = document.createElement('div');
+    wrap.className = 'compare-answer';
+    const hanzi = document.createElement('div');
+    hanzi.className = 'compare-hanzi';
+    hanzi.textContent = card.hanzi;
+    const pinyin = document.createElement('div');
+    pinyin.className = 'compare-pinyin';
+    pinyin.textContent = card.pinyin || '';
+    // для вопроса «напиши пиньинь» главное — сам пиньинь
+    if (q && q.kind === 'pinyin') pinyin.style.fontWeight = '700';
+    wrap.appendChild(hanzi);
+    wrap.appendChild(pinyin);
+    const meaning = document.createElement('div');
+    meaning.className = 'compare-meaning';
+    meaning.textContent = card.meaning || '';
+    wrap.appendChild(meaning);
+    return wrap;
+  }
+
+  /** Копирует твой рисунок на маленький холст сравнения. */
+  function copyPadTo(target) {
+    if (!pad) return;
+    const ctx = target.getContext('2d');
+    ctx.clearRect(0, 0, target.width, target.height);
+    const scale = target.width / pad.canvas.width;
+    ctx.scale(scale, scale);
+    ctx.drawImage(pad.canvas, 0, 0);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
 
   function showVerdict(ok, text) {
