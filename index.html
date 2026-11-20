@@ -131,9 +131,9 @@
 
     <!-- поле для пиньиня: всегда на экране, без системных окон -->
     <div class="pinyin-box" id="pinyinBox" hidden>
-      <label for="pinyinInput">Пиньинь с тонами (можно без них)</label>
-      <input id="pinyinInput" type="text" inputmode="latin" autocapitalize="off"
-             autocorrect="off" spellcheck="false" enterkeyhint="done" placeholder="nǐ hǎo">
+      <label for="pinyinInput">Напиши пиньинь латиницей — тон можно цифрой: ni3 hao3 или просто ni hao</label>
+      <input id="pinyinInput" type="text" inputmode="text" autocapitalize="off"
+             autocorrect="off" spellcheck="false" enterkeyhint="go" placeholder="ni hao  или  ni3 hao3">
     </div>
 
     <div class="verdict" id="verdict" hidden></div>
@@ -172,7 +172,7 @@
     <h1 class="view-title">Добавить слово</h1>
     <form id="formAdd" class="form" autocomplete="off">
       <label>Иероглиф *<input id="fHanzi" name="hanzi" lang="zh" inputmode="text" required placeholder="你好"></label>
-      <label>Пиньинь<input id="fPinyin" name="pinyin" placeholder="nǐ hǎo"></label>
+      <label>Пиньинь<input id="fPinyin" name="pinyin" placeholder="ni hao  или  ni3 hao3"></label>
       <label>Перевод *<input id="fMeaning" name="meaning" required placeholder="привет"></label>
       <label>Пример (китайский)<input id="fExZh" name="example_zh" lang="zh" placeholder="你好！"></label>
       <label>Пример (перевод)<input id="fExRu" name="example_ru" placeholder="Привет!"></label>
