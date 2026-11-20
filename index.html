@@ -123,37 +123,36 @@
       <div class="prompt" id="faceHanzi"></div>
     </div>
 
-    <div class="write-area">
-      <canvas id="pad" width="600" height="600" aria-label="пиши здесь"></canvas>
-      <div class="pad-hint" id="padHint">напиши ответ пальцем</div>
-      <canvas id="hintLayer" width="600" height="600" hidden aria-hidden="true"></canvas>
-    </div>
+    <!-- Плитка письма: сначала холст на всю ширину, после проверки — рядом эталон -->
+    <div class="board" id="board">
+      <div class="board-main">
+        <div class="write-area" id="writeArea">
+          <canvas id="pad" width="600" height="600" aria-label="пиши здесь"></canvas>
+          <div class="pad-hint" id="padHint">напиши ответ пальцем</div>
+          <canvas id="hintLayer" width="600" height="600" hidden aria-hidden="true"></canvas>
+        </div>
 
-    <!-- поле для пиньиня: всегда на экране, без системных окон -->
-    <div class="pinyin-box" id="pinyinBox" hidden>
-      <label for="pinyinInput">Напиши пиньинь латиницей — тон можно цифрой: ni3 hao3 или просто ni hao</label>
-      <input id="pinyinInput" type="text" inputmode="text" autocapitalize="off"
-             autocorrect="off" spellcheck="false" enterkeyhint="go" placeholder="ni hao  или  ni3 hao3">
+        <!-- поле для пиньиня: всегда на экране, без системных окон -->
+        <div class="pinyin-box" id="pinyinBox" hidden>
+          <label for="pinyinInput">Напиши пиньинь латиницей — тон цифрой: ni3 hao3 или просто ni hao</label>
+          <input id="pinyinInput" type="text" inputmode="text" autocapitalize="off"
+                 autocorrect="off" spellcheck="false" enterkeyhint="go" placeholder="ni hao  или  ni3 hao3">
+        </div>
+        <div class="board-label" id="mineLabel" hidden>твой рисунок</div>
+      </div>
+
+      <div class="board-ref" id="boardRef" hidden>
+        <div class="board-label">как надо</div>
+        <div class="compare-ref" id="compareRef"></div>
+      </div>
     </div>
 
     <div class="verdict" id="verdict" hidden></div>
 
-    <div class="pad-actions">
+    <div class="pad-actions" id="padActions">
       <button class="btn ghost" id="btnErase">🧽 Стереть</button>
       <button class="btn primary" id="btnCheck">Проверить</button>
       <button class="btn ghost" id="btnHint">💡 Подсказка</button>
-    </div>
-
-    <!-- После «Проверить»: твой рисунок и рядом правильно напечатанный иероглиф -->
-    <div class="compare" id="compare" hidden>
-      <div class="compare-col">
-        <div class="compare-title">твой рисунок</div>
-        <canvas id="compareMine" width="300" height="300"></canvas>
-      </div>
-      <div class="compare-col">
-        <div class="compare-title">как надо</div>
-        <div class="compare-ref" id="compareRef"></div>
-      </div>
     </div>
 
     <div class="actions" id="answerActions" hidden>
@@ -161,9 +160,6 @@
     </div>
 
     <div class="answer" id="answer" hidden>
-      <div class="answer-hanzi" id="ansHanzi"></div>
-      <div class="answer-pinyin" id="ansPinyin"></div>
-      <div class="answer-meaning" id="ansMeaning"></div>
       <div class="answer-ex" id="ansExample"></div>
       <div class="answer-note" id="ansNote"></div>
     </div>
