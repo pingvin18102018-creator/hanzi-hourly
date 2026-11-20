@@ -28,10 +28,12 @@
   const MAX_STAGE = STAGES.length - 1;
   // Слово с ошибкой возвращается в следующей тренировке (не раньше 30 минут).
   const LAPSE_MIN_GAP = 30 * 60 * 1000;
-  // Три вопроса к слову — как в твоих карточках: по иероглифу, по пиньиню, по переводу.
+  // Вопросы к слову — как в твоих карточках: по пиньиню, по иероглифу, по переводу.
+  // Пиньинь проверяется двумя способами: панель тонов и выбор из 4 вариантов.
   const QUESTION_TYPES = [
     { id: 'pinyin_to_hanzi', label: 'по пиньиню → иероглиф' },
-    { id: 'hanzi_to_pinyin', label: 'по иероглифу → пиньинь' },
+    { id: 'pinyin_panel', label: 'пишу пиньинь, тон — кнопкой' },
+    { id: 'pinyin_choice', label: 'какой пиньинь правильный' },
     { id: 'meaning_to_hanzi', label: 'по переводу → иероглиф' },
   ];
 
@@ -80,9 +82,28 @@
 
   /** Что показать в вопросе (и что спрятать) для каждого типа. */
   function questionFor(card, type) {
+    // панель тонов: пишешь буквы, тон ставишь кнопкой
+    if (type === 'pinyin_panel') {
+      return { prompt: card.hanzi, ask: 'напиши пиньинь — тон поставь кнопкой', kind: 'pinyin_panel' };
+    }
+    // выбор из 4: какой пиньинь правильный
+    if (type === 'pinyin_choice') {
+      return { prompt: card.hanzi, ask: 'какой пиньинь правильный?', kind: 'pinyin_choice' };
+    }
     if (type === 'hanzi_to_pinyin') return { prompt: card.hanzi, ask: 'напиши пиньинь', kind: 'pinyin' };
     if (type === 'pinyin_to_hanzi') return { prompt: card.pinyin || card.hanzi, ask: 'напиши иероглиф', kind: 'hanzi' };
     return { prompt: card.meaning || card.hanzi, ask: 'напиши иероглиф', kind: 'hanzi' };
+  }
+
+  /**
+   * Какой способ проверки пиньиня использовать.
+   * mode: 'panel' — только панель тонов; 'choice' — только 4 варианта; 'both' — как повезёт.
+   */
+  function pinyinTypeFor(mode, rnd) {
+    const r = typeof rnd === 'function' ? rnd : Math.random;
+    if (mode === 'panel') return 'pinyin_panel';
+    if (mode === 'choice') return 'pinyin_choice';
+    return r() < 0.5 ? 'pinyin_panel' : 'pinyin_choice';
   }
 
   /** Сколько вопросов в тренировке: ровно limit, но не больше, чем слов. */
@@ -195,6 +216,6 @@
   return {
     HOUR, DAY, STAGES, MAX_STAGE, LAPSE_MIN_GAP, QUESTION_TYPES,
     next, isDue, pickSession, dueCount, describeDue, parseList, keyOf,
-    pickQuestionType, questionFor, sessionSize,
+    pickQuestionType, questionFor, sessionSize, pinyinTypeFor,
   };
 });
