@@ -294,3 +294,69 @@ textarea { min-height: 180px; resize: vertical; }
 .compare-hanzi { font-size: clamp(2.6rem, 18vw, 4.5rem); font-weight: 700; }
 .compare-pinyin { font-size: 1.25rem; color: var(--red); margin-top: 2px; }
 .compare-meaning { font-size: 0.95rem; color: var(--ink-soft); margin-top: 2px; }
+/* ---------- плитка письма: всё в одном экране, без прокрутки ---------- */
+/* Вопрос и кнопки закреплены, уменьшается только холст. */
+#view-session {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+#view-session[hidden] { display: none; }
+
+.question { flex: 0 0 auto; padding: 2px 0 6px; }
+.question .prompt { font-size: clamp(1.6rem, 10vw, 2.6rem); }
+
+.board {
+  display: flex;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 4px 0 8px;
+}
+.board-main { display: flex; flex-direction: column; flex: 1 1 100%; min-width: 0; }
+.board-ref {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  flex: 0 0 46%; min-width: 0;
+}
+.board-ref[hidden] { display: none; }
+.board-label { font-size: 0.74rem; color: var(--gray); text-align: center; margin-top: 4px; }
+
+/* холст вписывается в свободную высоту, ширину и остаток экрана */
+.write-area {
+  position: relative;
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+#pad, #hintLayer {
+  position: absolute; left: 0; top: 0; width: 100%; height: 100%;
+  touch-action: none; user-select: none; -webkit-user-select: none;
+  background: #fff; border: 2px solid var(--line); border-radius: 14px;
+}
+#hintLayer { pointer-events: none; border-color: transparent; background: transparent; }
+
+.compare-ref {
+  width: 100%; flex: 1 1 auto; min-height: 0;
+  background: #fff; border: 2px solid var(--line); border-radius: 14px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 6px; line-height: 1.1;
+}
+.compare-hanzi { font-size: clamp(2rem, 12vw, 3.4rem); font-weight: 700; font-family: "Microsoft YaHei", "Noto Sans SC", sans-serif; }
+.compare-pinyin { font-size: 1rem; color: var(--red); margin-top: 2px; }
+.compare-meaning { font-size: 0.85rem; color: var(--ink-soft); margin-top: 2px; text-align: center; }
+
+/* поле пиньиня не выталкивает экран */
+.pinyin-box { flex: 0 0 auto; }
+.pinyin-box input { font-size: 1.15rem; min-height: 46px; padding: 8px 12px; }
+
+.verdict { flex: 0 0 auto; min-height: 1.4rem; margin: 2px 0; font-size: 0.98rem; }
+.pad-actions { flex: 0 0 auto; }
+.pad-actions .btn { padding: 12px 4px; }
+#answerActions .btn { padding: 12px; }
+.answer { flex: 0 0 auto; font-size: 0.9rem; }
+
+@media (prefers-color-scheme: dark) {
+  #pad { background: #23282d; }
+  .compare-ref { background: #23282d; }
+}
