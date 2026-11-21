@@ -120,23 +120,37 @@
     return (card.due || 0) <= t;
   }
 
+  /** Перемешивает список (Фишер–Йетс) — чтобы слова не шли по порядку добавления. */
+  function shuffle(list, rnd) {
+    const r = typeof rnd === 'function' ? rnd : Math.random;
+    const copy = (list || []).slice();
+    for (let i = copy.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(r() * (i + 1));
+      const tmp = copy[i];
+      copy[i] = copy[j];
+      copy[j] = tmp;
+    }
+    return copy;
+  }
+
   /**
-   * Карточки для тренировки: сначала самые «просроченные».
+   * Карточки для тренировки: берём самые «просроченные», но в СЛУЧАЙНОМ порядке.
    * Если готовых к повторению мало (например, всё выучено) — берём ближайшие
    * по времени, чтобы сессия никогда не была пустой, но не больше limit.
    */
-  function pickSession(cards, limit, now, filter) {
+  function pickSession(cards, limit, now, filter, rnd) {
     const t = Number.isFinite(now) ? now : Date.now();
     const n = Math.max(1, Number(limit) || 5);
     const pool = (cards || [])
       .filter((c) => c && !c.archived)
       .filter((c) => (typeof filter === 'function' ? filter(c) : true));
     const due = pool.filter((c) => (c.due || 0) <= t).sort((a, b) => (a.due || 0) - (b.due || 0));
-    if (due.length >= n) return due.slice(0, n);
+    if (due.length >= n) return shuffle(due.slice(0, n), rnd);
     const upcoming = pool
       .filter((c) => (c.due || 0) > t)
       .sort((a, b) => (a.due || 0) - (b.due || 0));
-    return due.concat(upcoming).slice(0, n);
+    // даже «добранные» слова перемешиваем
+    return shuffle(due.concat(upcoming).slice(0, n), rnd);
   }
 
   /** Сколько карточек ждут повторения. */
@@ -215,7 +229,7 @@
 
   return {
     HOUR, DAY, STAGES, MAX_STAGE, LAPSE_MIN_GAP, QUESTION_TYPES,
-    next, isDue, pickSession, dueCount, describeDue, parseList, keyOf,
+    next, isDue, pickSession, dueCount, describeDue, parseList, keyOf, shuffle,
     pickQuestionType, questionFor, sessionSize, pinyinTypeFor,
   };
 });
