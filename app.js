@@ -10,7 +10,7 @@
   const DEFAULT_SETTINGS = {
     intervalMin: 60,      // перерыв между напоминаниями
     pinyinMode: 'both',   // both | panel | choice — как проверять пиньинь
-    sessionSize: 10,      // карточек (вопросов) за тренировку
+    sessionSize: 15,      // карточек (вопросов) за тренировку
     nextAt: 0,            // когда напомнить в следующий раз
     installedAt: 0,
     lastNotifiedAt: 0,
@@ -327,13 +327,24 @@
     return pad;
   }
 
+  /** Маркер: на светлой доске — тёмный, на тёмной — белый (иначе не видно). */
+  function inkColor() {
+    try {
+      const dark = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)
+        || (document.body && document.body.classList.contains('dark'));
+      return dark ? '#ffffff' : '#1f2d3a';
+    } catch (e) {
+      return '#1f2d3a';
+    }
+  }
+
   function drawPad() {
     if (!pad) return;
     const { ctx } = pad;
     const w = pad.canvas.width;
     const h = pad.canvas.height;
     ctx.clearRect(0, 0, w, h);
-    ctx.strokeStyle = '#1f2d3a';
+    ctx.strokeStyle = inkColor();
     ctx.lineWidth = 14;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
