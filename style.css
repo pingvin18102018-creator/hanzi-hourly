@@ -359,6 +359,7 @@ textarea { min-height: 180px; resize: vertical; }
 @media (prefers-color-scheme: dark) {
   #pad { background: #23282d; }
   .compare-ref { background: #23282d; }
+  .pad-hint { color: #c3c7c5; }
 }
 /* ---------- панель тонов ---------- */
 .tone-panel { flex: 0 0 auto; margin: 6px 0 4px; overflow-x: hidden; }
